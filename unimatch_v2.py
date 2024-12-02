@@ -58,7 +58,8 @@ def main():
         'giant': {'encoder_size': 'giant', 'features': 384, 'out_channels': [1536, 1536, 1536, 1536]}
     }
     model = DPT(**{**model_configs[cfg['backbone'].split('_')[-1]], 'nclass': cfg['nclass']})
-    state_dict = torch.load(f'./pretrained/{cfg["backbone"]}.pth')
+    # state_dict = torch.load(f'./pretrained/{cfg["backbone"]}.pth')
+    state_dict = torch.load('/kaggle/input/dino-small-pretrained/dinov2_vits14_pretrain.pth')
     model.backbone.load_state_dict(state_dict)
         
     if cfg['lock_backbone']:
