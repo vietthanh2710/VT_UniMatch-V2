@@ -3,7 +3,7 @@ import logging
 import glob
 import os
 import pprint
-
+from torchvision.utils import save_image
 import torch
 import numpy as np
 from torch import nn
@@ -15,12 +15,17 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import yaml
 
-from dataset.semi import SemiDataset
+from dataset.supervised import SemiDataset
 from model.semseg.dpt import DPT
+from model.unet import UNet
 from util.classes import CLASSES
 from util.ohem import ProbOhemCrossEntropy2d
-from util.utils import count_params, AverageMeter, intersectionAndUnion, init_log
+from util.utils import count_params, AverageMeter, intersectionAndUnion, init_log, SegmentationMetrics
 from util.dist_helper import setup_distributed
+
+import warnings
+# Suppress specific warnings
+warnings.filterwarnings("ignore")
 
 
 parser = argparse.ArgumentParser(description='Fully-Supervised Training in Semantic Segmentation')
@@ -38,6 +43,9 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
     assert mode in ['original', 'center_crop', 'sliding_window']
     intersection_meter = AverageMeter()
     union_meter = AverageMeter()
+    # dice_meter = AverageMeter()
+    # precision_meter = AverageMeter()
+    # recall_meter = AverageMeter()
 
     with torch.no_grad():
         for img, mask, id in loader:
@@ -73,32 +81,49 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
                         new_h, new_w = 512, 512
                     else:
                         new_h, new_w = int(ori_h / multiplier + 0.5) * multiplier, int(ori_w / multiplier + 0.5) * multiplier
-                    img = F.interpolate(img, (new_h, new_w), mode='bilinear', align_corners=True)
-                
+                    # img = F.interpolate(img, (new_h, new_w), mode='bilinear', align_corners=True)
+                    img = F.interpolate(img, (266, 266), mode='bilinear', align_corners=True)
                 pred = model(img)
             
                 if multiplier is not None:
                     pred = F.interpolate(pred, (ori_h, ori_w), mode='bilinear', align_corners=True)
-            
-            pred = pred.argmax(dim=1)
 
+            # metric_calculator = SegmentationMetrics(average=True, ignore_background=True, ignore_index = 255,activation='0-1')
+            # _, dice, precision, recall = metric_calculator(mask, pred.cpu())
+
+            pred = pred.argmax(dim=1)
+            
             intersection, union, target = \
                 intersectionAndUnion(pred.cpu().numpy(), mask.numpy(), cfg['nclass'], 255)
-
+            
             reduced_intersection = torch.from_numpy(intersection).cuda()
             reduced_union = torch.from_numpy(union).cuda()
             reduced_target = torch.from_numpy(target).cuda()
+            
+            # reduced_dice = torch.from_numpy(np.array([dice])).cuda()
+            # reduced_precision = torch.from_numpy(np.array([precision])).cuda()
+            # reduced_recall = torch.from_numpy(np.array([recall])).cuda()
 
             dist.all_reduce(reduced_intersection)
             dist.all_reduce(reduced_union)
             dist.all_reduce(reduced_target)
+            # dist.all_reduce(reduced_dice)
+            # dist.all_reduce(reduced_precision)
+            # dist.all_reduce(reduced_recall)
 
             intersection_meter.update(reduced_intersection.cpu().numpy())
             union_meter.update(reduced_union.cpu().numpy())
+            # dice_meter.update(reduced_dice.cpu().numpy())
+            # precision_meter.update(reduced_precision.cpu().numpy())
+            # recall_meter.update(reduced_recall.cpu().numpy())
+
 
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
     mIOU = np.mean(iou_class)
 
+    # mdice = np.mean(dice_meter)
+    # mprecision = np.mean(precision_meter)
+    # mrecall = np.mean(recall_meter)
     return mIOU, iou_class
 
 
@@ -132,9 +157,10 @@ def main():
         'giant': {'encoder_size': 'giant', 'features': 384, 'out_channels': [1536, 1536, 1536, 1536]}
     }
     model = DPT(**{**model_configs[cfg['backbone'].split('_')[-1]], 'nclass': cfg['nclass']})
-    
-    state_dict = torch.load(f'./pretrained/{cfg["backbone"]}.pth')
+    state_dict = torch.load('/kaggle/input/doc_code/pytorch/default/1/1_Code/dinov2_vits14_pretrain.pth')
     model.backbone.load_state_dict(state_dict)
+
+    # model = UNet(n_channels=3,n_classes=1)
     
     if cfg['lock_backbone']:
         model.lock_backbone()
@@ -146,7 +172,12 @@ def main():
         ], 
         lr=cfg['lr'], betas=(0.9, 0.999), weight_decay=0.01
     )
-    
+    # optimizer = AdamW(
+    #     [
+    #         {'params': [p for p in model.parameters()]},
+    #     ], 
+    #     lr=cfg['lr'], betas=(0.9, 0.999), weight_decay=0.01
+    # )    
     if rank == 0:
         logger.info('Total params: {:.1f}M\n'.format(count_params(model)))
     
@@ -168,7 +199,8 @@ def main():
         'pascal': 3000, 
         'cityscapes': 3000, 
         'ade20k': 6000, 
-        'coco': 30000
+        'coco': 30000,
+        'doc': 1000
     }
     trainset = SemiDataset(
         cfg['dataset'], cfg['data_root'], 'train_l', cfg['crop_size'], args.labeled_id_path, nsample=n_upsampled[cfg['dataset']]
@@ -186,7 +218,8 @@ def main():
     valloader = DataLoader(
         valset, batch_size=1, pin_memory=True, num_workers=1, drop_last=False, sampler=valsampler
     )
-    
+    print(len(trainsampler),len(valsampler))
+    print(len(trainloader),len(valloader))
     iters = 0
     total_iters = len(trainloader) * cfg['epochs']
     previous_best = 0.0
@@ -227,7 +260,7 @@ def main():
             total_loss.update(loss.item())
 
             iters = epoch * len(trainloader) + i
-            lr = cfg['lr'] * (1 - iters / total_iters) ** 0.9
+            lr = cfg['lr'] * (1 - iters / total_iters) ** 0.95
             optimizer.param_groups[0]["lr"] = lr
             optimizer.param_groups[1]["lr"] = lr * cfg['lr_multi']
             
@@ -245,9 +278,15 @@ def main():
             for (cls_idx, iou) in enumerate(iou_class):
                 logger.info('***** Evaluation ***** >>>> Class [{:} {:}] '
                             'IoU: {:.2f}'.format(cls_idx, CLASSES[cfg['dataset']][cls_idx], iou))
-            logger.info('***** Evaluation {} ***** >>>> MeanIoU: {:.2f}\n'.format(eval_mode, mIoU))
+            logger.info('***** Evaluation {} ***** >>>> MeanIoU      : {:.2f}\n'.format(eval_mode, mIoU))
+            # logger.info('***** Evaluation {} ***** >>>> MeanDice     : {:.2f}\n'.format(eval_mode, mdice))
+            # logger.info('***** Evaluation {} ***** >>>> MeanPrecision: {:.2f}\n'.format(eval_mode, mprecision))
+            # logger.info('***** Evaluation {} ***** >>>> MeanRecall   : {:.2f}\n'.format(eval_mode, mrecall))
             
             writer.add_scalar('eval/mIoU', mIoU, epoch)
+            # writer.add_scalar('eval/mdice', mdice, epoch)
+            # writer.add_scalar('eval/mprecision', mprecision, epoch)
+            # writer.add_scalar('eval/mrecall', mrecall, epoch)
             for i, iou in enumerate(iou_class):
                 writer.add_scalar('eval/%s_IoU' % (CLASSES[cfg['dataset']][i]), iou, epoch)
         
