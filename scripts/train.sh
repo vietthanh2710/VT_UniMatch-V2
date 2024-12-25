@@ -5,15 +5,15 @@
 # method: ['unimatch_v2', 'fixmatch', 'supervised']
 # exp: just for specifying the 'save_path'
 # split: ['92', '1_16', ...]. Please check directory './splits/$dataset' for concrete splits
-dataset='pascal'
-method='unimatch_v2'
+dataset='doc'
+method='supervised'
 exp='dinov2_small'
 split='366'
 
 config=configs/${dataset}.yaml
-labeled_id_path=splits/$dataset/$split/labeled.txt
+labeled_id_path=/kaggle/input/doc-data/2_DocumentSegmentation/train.txt
 unlabeled_id_path=splits/$dataset/$split/unlabeled.txt
-save_path=exp/$dataset/$method/$exp/$split
+save_path=/kaggle/working/exp/doc/supervised
 
 mkdir -p $save_path
 
