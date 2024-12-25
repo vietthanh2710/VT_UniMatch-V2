@@ -1,0 +1,21 @@
+# arguments for dataset
+dataset: doc
+data_root: /u03/thanhnv/2_DocumentSegmentation
+nclass: 2
+crop_size: 266
+
+# arguments for training
+epochs: 60
+batch_size: 4 # per GPU x 4 GPUs
+lr: 0.00002
+lr_multi: 10.0
+criterion:
+  name: CELoss
+  kwargs:
+    ignore_index: 255
+conf_thresh: 0.95
+
+# arguments for model
+model: dpt
+backbone: dinov2_small
+lock_backbone: False
