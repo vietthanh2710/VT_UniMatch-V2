@@ -186,7 +186,7 @@ def main():
         raise NotImplementedError('%s criterion is not implemented' % cfg['criterion']['name'])
     
     valset = SemiDataset(
-        cfg['dataset'], cfg['data_root'], id_path = '/kaggle/working/VT_UniMatch-V2/val.txt', 'val'
+        cfg['dataset'], cfg['data_root'], 'val', id_path = '/kaggle/working/VT_UniMatch-V2/val.txt'
     )
     
     valsampler = torch.utils.data.distributed.DistributedSampler(valset)
