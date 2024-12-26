@@ -195,7 +195,8 @@ def main():
     )
     print(len(valloader))
 
-    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    # checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    checkpoint = torch.load('/kaggle/input/uni2_model/pytorch/default/1/best.pth')
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         epoch = checkpoint['epoch']
