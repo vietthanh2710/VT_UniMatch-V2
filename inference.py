@@ -14,7 +14,7 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import yaml
-
+from PIL import Image
 from dataset.supervised import SemiDataset
 from model.semseg.dpt import DPT
 from util.classes import CLASSES
