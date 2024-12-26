@@ -122,7 +122,7 @@ def main():
     model.eval()
 
     eval_mode = 'sliding_window' if cfg['dataset'] == 'cityscapes' else 'original'
-    pred_batch  = evaluate(model, valloader, eval_mode, cfg, multiplier=14)
+    pred_batch  = inference(model, valloader, eval_mode, cfg, multiplier=14)
     for idx, pred in enumerate(pred_batch):
         # Convert prediction to a PIL image
         pred_image = Image.fromarray((pred * 255).astype(np.uint8))
