@@ -12,7 +12,7 @@ split='366'
 
 config=configs/${dataset}.yaml
 labeled_id_path=/kaggle/input/doc-data/2_DocumentSegmentation/train.txt
-save_path=/kaggle/working/exp/doc/supervised
+save_path=/kaggle/working/infer
 
 mkdir -p $save_path
 
