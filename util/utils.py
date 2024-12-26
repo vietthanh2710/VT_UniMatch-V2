@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 import os
-
+import torch
 
 class SegmentationMetrics(object):
     r"""Calculate common metrics in semantic segmentation to evalueate model preformance.
