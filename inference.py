@@ -56,16 +56,14 @@ def inference(model, loader, mode, cfg, multiplier=None):
             
             if multiplier is not None:
                 pred = F.interpolate(pred, (ori_h, ori_w), mode='bilinear', align_corners=True)
-
+            print(pred.size())
             pred = pred.argmax(dim=1).cpu().numpy()
-            print(pred.size)
+            print(pred.size())
             # pred_image = Image.fromarray((pred * 255).astype(np.uint8))
         
             # # Save the image with the index as the file name
             # pred_image.save(f"mask_{i}.png")
             i += 1
-
-    return pred_batch
 
 def main():
     args = parser.parse_args()
