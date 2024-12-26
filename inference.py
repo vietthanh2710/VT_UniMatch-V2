@@ -58,8 +58,12 @@ def inference(model, loader, mode, cfg, multiplier=None):
             if multiplier is not None:
                 pred = F.interpolate(pred, (ori_h, ori_w), mode='bilinear', align_corners=True)
 
-            pred = pred.argmax(dim=1)
-            pred_batch.append(pred.cpu().numpy())
+            pred = pred.argmax(dim=1).cpu().numpy())
+
+            pred_image = Image.fromarray((pred * 255).astype(np.uint8))
+        
+            # Save the image with the index as the file name
+            pred_image.save(f"mask_{i}.png")
             i += 1
 
     return pred_batch
@@ -123,12 +127,6 @@ def main():
 
     eval_mode = 'sliding_window' if cfg['dataset'] == 'cityscapes' else 'original'
     pred_batch  = inference(model, valloader, eval_mode, cfg, multiplier=14)
-    for idx, pred in enumerate(pred_batch):
-        # Convert prediction to a PIL image
-        pred_image = Image.fromarray((pred * 255).astype(np.uint8))
-        
-        # Save the image with the index as the file name
-        pred_image.save(os.path.join(args.save_path, f"mask_{idx}.png"))
         
 
 if __name__ == '__main__':
