@@ -27,15 +27,14 @@ import warnings
 # Suppress specific warnings
 warnings.filterwarnings("ignore")
 
-
 parser = argparse.ArgumentParser(description='Fully-Supervised Training in Semantic Segmentation')
 parser.add_argument('--config', type=str, required=True)
 parser.add_argument('--labeled-id-path', type=str, required=True)
+parser.add_argument('--checkpoint', default=None, type=str, required=True)
 parser.add_argument('--pretrained-path', type=str, default=None)
 parser.add_argument('--save-path', type=str, required=True)
 parser.add_argument('--local_rank', '--local-rank', default=0, type=int)
 parser.add_argument('--port', default=None, type=int)
-parser.add_argument('--checkpoint', default=None, type=str, required=True)
 
 
 def evaluate(model, loader, mode, cfg, multiplier=None):
@@ -117,7 +116,6 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
             precision_meter.update(reduced_precision.cpu().numpy())
             recall_meter.update(reduced_recall.cpu().numpy())
 
-
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
     mIOU = np.mean(iou_class)
 
@@ -126,10 +124,9 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
     mrecall = np.mean(recall_meter)
     return mIOU, iou_class
 
-
 def main():
     args = parser.parse_args()
-
+    checkpoint_path = args.checkpoint
     cfg = yaml.load(open(args.config, "r"), Loader=yaml.Loader)
 
     logger = init_log('global', logging.INFO)
@@ -188,13 +185,6 @@ def main():
     else:
         raise NotImplementedError('%s criterion is not implemented' % cfg['criterion']['name'])
     
-    n_upsampled = {
-        'pascal': 3000, 
-        'cityscapes': 3000, 
-        'ade20k': 6000, 
-        'coco': 30000,
-        'doc': 1000
-
     valset = SemiDataset(
         cfg['dataset'], cfg['data_root'], 'val'
     )
