@@ -53,7 +53,8 @@ def inference(model, loader, mode, cfg, multiplier=None):
                     # img = F.interpolate(img, (new_h, new_w), mode='bilinear', align_corners=True)
             img = F.interpolate(img, (266, 266), mode='bilinear', align_corners=True)
             pred = model(img)
-            
+            print(len(pred))
+            print(pred.shape())
             if multiplier is not None:
                 pred = F.interpolate(pred, (ori_h, ori_w), mode='bilinear', align_corners=True)
             pred = pred.argmax(dim=1).cpu().numpy()
