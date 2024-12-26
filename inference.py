@@ -116,6 +116,7 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
             precision_meter.update(reduced_precision.cpu().numpy())
             recall_meter.update(reduced_recall.cpu().numpy())
 
+            print(dice_meter.avg,precision_meter.avg,recall_meter.avg)
             i += 1
 
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
