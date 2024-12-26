@@ -40,9 +40,9 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
     assert mode in ['original', 'center_crop', 'sliding_window']
     intersection_meter = AverageMeter()
     union_meter = AverageMeter()
-    # dice_meter = AverageMeter()
-    # precision_meter = AverageMeter()
-    # recall_meter = AverageMeter()
+    dice_meter = AverageMeter()
+    precision_meter = AverageMeter()
+    recall_meter = AverageMeter()
 
     with torch.no_grad():
         for img, mask, id in loader:
