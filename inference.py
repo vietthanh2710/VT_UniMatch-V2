@@ -214,12 +214,11 @@ def main():
         logger.info('***** Evaluation {} ***** >>>> MeanPrecision: {:.2f}\n'.format(eval_mode, np.mean(mprecision)))
         logger.info('***** Evaluation {} ***** >>>> MeanRecall   : {:.2f}\n'.format(eval_mode, np.mean(mrecall)))
             
-        writer.add_scalar('eval/mIoU', mIoU, epoch)
-        writer.add_scalar('eval/mdice', mdice, epoch)
-        writer.add_scalar('eval/mprecision', mprecision, epoch)
-        writer.add_scalar('eval/mrecall', mrecall, epoch)
-        for i, iou in enumerate(iou_class):
-            writer.add_scalar('eval/%s_IoU' % (CLASSES[cfg['dataset']][i]), iou, epoch)
+        writer.add_scalar('eval/mIoU', mIoU)
+        writer.add_scalar('eval/mdice', mdice)
+        writer.add_scalar('eval/mprecision', mprecisio)
+        writer.add_scalar('eval/mrecall', mrecall)
+
 
 if __name__ == '__main__':
     main()
