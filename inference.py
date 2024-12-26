@@ -45,6 +45,7 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
     recall_meter = AverageMeter()
 
     with torch.no_grad():
+        i = 0
         for img, mask, id in loader:
             
             img = img.cuda()
@@ -100,7 +101,7 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
             reduced_dice = torch.from_numpy(np.array([dice])).cuda()
             reduced_precision = torch.from_numpy(np.array([precision])).cuda()
             reduced_recall = torch.from_numpy(np.array([recall])).cuda()
-            print(f"{id} -- Dice: {dice}, Pre: {precision}, Recall: {recall}")
+            print(f"{i} -- Dice: {dice}, Pre: {precision}, Recall: {recall}")
             
             dist.all_reduce(reduced_intersection)
             dist.all_reduce(reduced_union)
@@ -114,6 +115,8 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
             dice_meter.update(reduced_dice.cpu().numpy())
             precision_meter.update(reduced_precision.cpu().numpy())
             recall_meter.update(reduced_recall.cpu().numpy())
+
+            i += 1
 
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
     mIOU = np.mean(iou_class)
