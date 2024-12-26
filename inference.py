@@ -41,7 +41,7 @@ def inference(model, loader, mode, cfg, multiplier=None):
     pred_batch = []
     with torch.no_grad():
         i = 0
-        for img, _, id in loader:
+        for img, id in loader:
             
             img = img.cuda()
                 
