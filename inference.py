@@ -197,33 +197,29 @@ def main():
 
     # checkpoint = torch.load(checkpoint_path, map_location='cpu')
     checkpoint = torch.load('/kaggle/input/uni2_model/pytorch/default/1/best.pth')
-        model.load_state_dict(checkpoint['model'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        epoch = checkpoint['epoch']
-        previous_best = checkpoint['previous_best']
+    model.load_state_dict(checkpoint['model'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+    
+    model.eval()
 
-    for epoch in range(epoch + 1, cfg['epochs']):
-
-        model.eval()
-
-        eval_mode = 'sliding_window' if cfg['dataset'] == 'cityscapes' else 'original'
-        mIoU, iou_class = evaluate(model, valloader, eval_mode, cfg, multiplier=14)
+    eval_mode = 'sliding_window' if cfg['dataset'] == 'cityscapes' else 'original'
+    mIoU, iou_class = evaluate(model, valloader, eval_mode, cfg, multiplier=14)
         
-        if rank == 0:
-            for (cls_idx, iou) in enumerate(iou_class):
-                logger.info('***** Evaluation ***** >>>> Class [{:} {:}] '
-                            'IoU: {:.2f}'.format(cls_idx, CLASSES[cfg['dataset']][cls_idx], iou))
-            logger.info('***** Evaluation {} ***** >>>> MeanIoU      : {:.2f}\n'.format(eval_mode, mIoU))
-            logger.info('***** Evaluation {} ***** >>>> MeanDice     : {:.2f}\n'.format(eval_mode, mdice))
-            logger.info('***** Evaluation {} ***** >>>> MeanPrecision: {:.2f}\n'.format(eval_mode, mprecision))
-            logger.info('***** Evaluation {} ***** >>>> MeanRecall   : {:.2f}\n'.format(eval_mode, mrecall))
+    if rank == 0:
+        for (cls_idx, iou) in enumerate(iou_class):
+            logger.info('***** Evaluation ***** >>>> Class [{:} {:}] '
+                        'IoU: {:.2f}'.format(cls_idx, CLASSES[cfg['dataset']][cls_idx], iou))
+        logger.info('***** Evaluation {} ***** >>>> MeanIoU      : {:.2f}\n'.format(eval_mode, mIoU))
+        logger.info('***** Evaluation {} ***** >>>> MeanDice     : {:.2f}\n'.format(eval_mode, mdice))
+        logger.info('***** Evaluation {} ***** >>>> MeanPrecision: {:.2f}\n'.format(eval_mode, mprecision))
+        logger.info('***** Evaluation {} ***** >>>> MeanRecall   : {:.2f}\n'.format(eval_mode, mrecall))
             
-            writer.add_scalar('eval/mIoU', mIoU, epoch)
-            writer.add_scalar('eval/mdice', mdice, epoch)
-            writer.add_scalar('eval/mprecision', mprecision, epoch)
-            writer.add_scalar('eval/mrecall', mrecall, epoch)
-            for i, iou in enumerate(iou_class):
-                writer.add_scalar('eval/%s_IoU' % (CLASSES[cfg['dataset']][i]), iou, epoch)
+        writer.add_scalar('eval/mIoU', mIoU, epoch)
+        writer.add_scalar('eval/mdice', mdice, epoch)
+        writer.add_scalar('eval/mprecision', mprecision, epoch)
+        writer.add_scalar('eval/mrecall', mrecall, epoch)
+        for i, iou in enumerate(iou_class):
+            writer.add_scalar('eval/%s_IoU' % (CLASSES[cfg['dataset']][i]), iou, epoch)
 
 if __name__ == '__main__':
     main()
