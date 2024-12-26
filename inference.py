@@ -53,12 +53,10 @@ def inference(model, loader, mode, cfg, multiplier=None):
                     # img = F.interpolate(img, (new_h, new_w), mode='bilinear', align_corners=True)
             img = F.interpolate(img, (266, 266), mode='bilinear', align_corners=True)
             pred = model(img)
-            print(len(pred))
-            print(pred.shape())
             if multiplier is not None:
                 pred = F.interpolate(pred, (ori_h, ori_w), mode='bilinear', align_corners=True)
             pred = pred.argmax(dim=1).cpu().numpy()
-            print(pred.shape())
+            print(pred)
             # pred_image = Image.fromarray((pred * 255).astype(np.uint8))
         
             # # Save the image with the index as the file name
