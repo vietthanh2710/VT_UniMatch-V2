@@ -116,7 +116,6 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
             precision_meter.update(reduced_precision.cpu().numpy())
             recall_meter.update(reduced_recall.cpu().numpy())
 
-            print(dice_meter.avg,precision_meter.avg,recall_meter.avg)
             i += 1
 
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
@@ -197,7 +196,7 @@ def main():
     print(len(valloader))
 
     # checkpoint = torch.load(checkpoint_path, map_location='cpu')
-    checkpoint = torch.load('/kaggle/input/uni2_model/pytorch/default/1/best.pth')
+    checkpoint = torch.load('/kaggle/input/uni2_model/pytorch/default/2/best.pth')
     model.load_state_dict(checkpoint['model'])
     optimizer.load_state_dict(checkpoint['optimizer'])
     
