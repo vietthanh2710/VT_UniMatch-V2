@@ -204,7 +204,7 @@ def main():
     model.eval()
 
     eval_mode = 'sliding_window' if cfg['dataset'] == 'cityscapes' else 'original'
-    mIoU, iou_class = evaluate(model, valloader, eval_mode, cfg, multiplier=14)
+    mIoU, iou_class, mdice, mprecision, mrecall  = evaluate(model, valloader, eval_mode, cfg, multiplier=14)
         
     if rank == 0:
         for (cls_idx, iou) in enumerate(iou_class):
