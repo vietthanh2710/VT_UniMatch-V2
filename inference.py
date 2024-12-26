@@ -120,10 +120,9 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
 
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
     mIOU = np.mean(iou_class)
-    print(dice_meter)
-    mdice = dice_meter
-    mprecision = precision_meter
-    mrecall = recall_meter
+    mdice = dice_meter.avg
+    mprecision = precision_meter.avg
+    mrecall = recall_meter.avg
     return mIOU, iou_class, mdice, mprecision, mrecall
 
 def main():
