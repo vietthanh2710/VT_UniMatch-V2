@@ -48,6 +48,10 @@ class SemiDataset(Dataset):
         img_path = os.path.join(self.root, id)
         img = Image.open(img_path).convert('RGB')
         
+        if self.mode == 'infer':
+            img = normalize(img)
+            return img, id
+            
         if self.mode == 'train_u':
             mask = Image.fromarray(np.zeros((img.size[1], img.size[0]), dtype=np.uint8))
         else:
