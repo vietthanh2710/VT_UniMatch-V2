@@ -17,7 +17,6 @@ import yaml
 
 from dataset.supervised import SemiDataset
 from model.semseg.dpt import DPT
-from model.unet import UNet
 from util.classes import CLASSES
 from util.ohem import ProbOhemCrossEntropy2d
 from util.utils import count_params, AverageMeter, intersectionAndUnion, init_log, SegmentationMetrics
