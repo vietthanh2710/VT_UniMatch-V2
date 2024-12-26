@@ -107,7 +107,7 @@ def main():
     )
 
     valset = SemiDataset(
-        cfg['dataset'], cfg['data_root'], 'val', id_path = '/kaggle/working/VT_UniMatch-V2/infer.txt'
+        cfg['dataset'], cfg['data_root'], 'infer', id_path = '/kaggle/working/VT_UniMatch-V2/infer.txt'
     )
 
     valsampler = torch.utils.data.distributed.DistributedSampler(valset)
