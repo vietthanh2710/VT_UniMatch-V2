@@ -13,7 +13,7 @@ split='366'
 config=configs/${dataset}.yaml
 labeled_id_path=/u03/thanhnv/2_DocumentSegmentation/train.txt
 save_path=/u03/thanhnv/1_Code/VT_UniMatch-V2/exp/doc/supervised
-checkpoint_path = /kaggle/input/uni2_model/pytorch/default/1/best.pth
+checkpoint_path= /kaggle/input/uni2_model/pytorch/default/1/best.pth
 
 mkdir -p $save_path
 
