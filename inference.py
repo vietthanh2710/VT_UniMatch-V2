@@ -41,22 +41,22 @@ def inference(model, loader, mode, cfg, multiplier=None):
     pred_batch = []
     with torch.no_grad():
         i = 0
-        for img, mask, id in loader:
+        for img, _, id in loader:
             
             img = img.cuda()
                 
-                if multiplier is not None:
-                    ori_h, ori_w = img.shape[-2:]
-                    if multiplier == 512:
-                        new_h, new_w = 512, 512
-                    else:
-                        new_h, new_w = int(ori_h / multiplier + 0.5) * multiplier, int(ori_w / multiplier + 0.5) * multiplier
+            if multiplier is not None:
+                ori_h, ori_w = img.shape[-2:]
+                if multiplier == 512:
+                    new_h, new_w = 512, 512
+            else:
+                    new_h, new_w = int(ori_h / multiplier + 0.5) * multiplier, int(ori_w / multiplier + 0.5) * multiplier
                     # img = F.interpolate(img, (new_h, new_w), mode='bilinear', align_corners=True)
                     img = F.interpolate(img, (266, 266), mode='bilinear', align_corners=True)
-                pred = model(img)
+            pred = model(img)
             
-                if multiplier is not None:
-                    pred = F.interpolate(pred, (ori_h, ori_w), mode='bilinear', align_corners=True)
+            if multiplier is not None:
+                pred = F.interpolate(pred, (ori_h, ori_w), mode='bilinear', align_corners=True)
 
             pred = pred.argmax(dim=1)
             pred_batch.append(pred.cpu().numpy())
