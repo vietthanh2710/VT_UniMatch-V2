@@ -87,7 +87,7 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
 
             metric_calculator = SegmentationMetrics(average=True, ignore_background=True, ignore_index = 255,activation='0-1')
             _, dice, precision, recall = metric_calculator(mask, pred.cpu())
-
+            
             pred = pred.argmax(dim=1)
             
             intersection, union, target = \
@@ -100,7 +100,8 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
             reduced_dice = torch.from_numpy(np.array([dice])).cuda()
             reduced_precision = torch.from_numpy(np.array([precision])).cuda()
             reduced_recall = torch.from_numpy(np.array([recall])).cuda()
-
+            print(f"{id} -- Dice: {dice}, Pre: {precision}, Recall: {recall}")
+            
             dist.all_reduce(reduced_intersection)
             dist.all_reduce(reduced_union)
             dist.all_reduce(reduced_target)
@@ -117,10 +118,10 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
     mIOU = np.mean(iou_class)
 
-    mdice = np.mean(dice_meter)
-    mprecision = np.mean(precision_meter)
-    mrecall = np.mean(recall_meter)
-    return mIOU, iou_class
+    mdice = dice_meter
+    mprecision = precision_meter
+    mrecall = recall_meter
+    return mIOU, iou_class, mdice, mprecision, mrecall
 
 def main():
     args = parser.parse_args()
