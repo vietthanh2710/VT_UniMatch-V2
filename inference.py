@@ -38,7 +38,6 @@ parser.add_argument('--port', default=None, type=int)
 def inference(model, loader, mode, cfg, multiplier=None):
     model.eval()
     assert mode in ['original', 'center_crop', 'sliding_window']
-    pred_batch = []
     with torch.no_grad():
         i = 0
         for img, id in loader:
@@ -52,7 +51,7 @@ def inference(model, loader, mode, cfg, multiplier=None):
             else:
                     new_h, new_w = int(ori_h / multiplier + 0.5) * multiplier, int(ori_w / multiplier + 0.5) * multiplier
                     # img = F.interpolate(img, (new_h, new_w), mode='bilinear', align_corners=True)
-                    img = F.interpolate(img, (266, 266), mode='bilinear', align_corners=True)
+            img = F.interpolate(img, (266, 266), mode='bilinear', align_corners=True)
             pred = model(img)
             
             if multiplier is not None:
