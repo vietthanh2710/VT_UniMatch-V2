@@ -29,7 +29,6 @@ warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser(description='Fully-Supervised Training in Semantic Segmentation')
 parser.add_argument('--config', type=str, required=True)
 parser.add_argument('--labeled-id-path', type=str, required=True)
-parser.add_argument('--checkpoint', default=None, type=str, required=True)
 parser.add_argument('--pretrained-path', type=str, default=None)
 parser.add_argument('--save-path', type=str, required=True)
 parser.add_argument('--local_rank', '--local-rank', default=0, type=int)
@@ -125,7 +124,6 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
 
 def main():
     args = parser.parse_args()
-    checkpoint_path = args.checkpoint
     cfg = yaml.load(open(args.config, "r"), Loader=yaml.Loader)
 
     logger = init_log('global', logging.INFO)
