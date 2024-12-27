@@ -209,10 +209,10 @@ def main():
         for (cls_idx, iou) in enumerate(iou_class):
             logger.info('***** Evaluation ***** >>>> Class [{:} {:}] '
                         'IoU: {:.2f}'.format(cls_idx, CLASSES[cfg['dataset']][cls_idx], iou))
-        logger.info('***** Evaluation {} ***** >>>> MeanIoU      : {:.2f}\n'.format(eval_mode, mIoU))
-        logger.info('***** Evaluation {} ***** >>>> MeanDice     : {:.2f}\n'.format(eval_mode, np.mean(mdice)))
-        logger.info('***** Evaluation {} ***** >>>> MeanPrecision: {:.2f}\n'.format(eval_mode, np.mean(mprecision)))
-        logger.info('***** Evaluation {} ***** >>>> MeanRecall   : {:.2f}\n'.format(eval_mode, np.mean(mrecall)))
+        logger.info('***** Evaluation {} ***** >>>> MeanIoU      : {:.4f}\n'.format(eval_mode, mIoU))
+        logger.info('***** Evaluation {} ***** >>>> MeanDice     : {:.4f}\n'.format(eval_mode, np.mean(mdice)))
+        logger.info('***** Evaluation {} ***** >>>> MeanPrecision: {:.4f}\n'.format(eval_mode, np.mean(mprecision)))
+        logger.info('***** Evaluation {} ***** >>>> MeanRecall   : {:.4f}\n'.format(eval_mode, np.mean(mrecall)))
             
         writer.add_scalar('eval/mIoU', mIoU)
         writer.add_scalar('eval/mdice', mdice)
