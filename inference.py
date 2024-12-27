@@ -36,6 +36,7 @@ parser.add_argument('--port', default=None, type=int)
 
 
 def inference(model, loader, mode, cfg, multiplier=None):
+    os.makedirs('output', exist_ok=True)
     model.eval()
     assert mode in ['original', 'center_crop', 'sliding_window']
     with torch.no_grad():
