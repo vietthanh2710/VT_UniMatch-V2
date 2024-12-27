@@ -21,7 +21,7 @@ from util.classes import CLASSES
 from util.ohem import ProbOhemCrossEntropy2d
 from util.utils import count_params, AverageMeter, intersectionAndUnion, init_log, SegmentationMetrics
 from util.dist_helper import setup_distributed
-
+from pathlib import Path
 import warnings
 # Suppress specific warnings
 warnings.filterwarnings("ignore")
@@ -41,7 +41,7 @@ def inference(model, loader, mode, cfg, multiplier=None):
     with torch.no_grad():
         i = 0
         for img, id in loader:
-            
+            print(id)
             img = img.cuda()
                 
             if multiplier is not None:
@@ -58,9 +58,9 @@ def inference(model, loader, mode, cfg, multiplier=None):
             pred = pred.argmax(dim=1).squeeze().cpu().numpy()
 
             pred_image = Image.fromarray((pred * 255).astype(np.uint8))
-        
+            filename = Path(str(id[0])).stem
             # Save the image with the index as the file name
-            pred_image.save(f"output/{str(id[0])}.png")
+            pred_image.save(f"output/{filename}.png")
             i += 1
 
 def main():
