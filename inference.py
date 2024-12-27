@@ -51,7 +51,7 @@ def inference(model, loader, mode, cfg, multiplier=None):
             else:
                     new_h, new_w = int(ori_h / multiplier + 0.5) * multiplier, int(ori_w / multiplier + 0.5) * multiplier
                     # img = F.interpolate(img, (new_h, new_w), mode='bilinear', align_corners=True)
-            img = F.interpolate(img, (266, 266), mode='bilinear', align_corners=True)
+            img = F.interpolate(img, (513, 513), mode='bilinear', align_corners=True)
             pred = model(img)
             if multiplier is not None:
                 pred = F.interpolate(pred, (ori_h, ori_w), mode='bilinear', align_corners=True)
@@ -60,7 +60,7 @@ def inference(model, loader, mode, cfg, multiplier=None):
             pred_image = Image.fromarray((pred * 255).astype(np.uint8))
         
             # Save the image with the index as the file name
-            pred_image.save(f"mask_{i}.png")
+            pred_image.save(f"output/{id}.png")
             i += 1
 
 def main():
