@@ -47,7 +47,7 @@ tam_tru **
 '''
 Category = ['bic_pru','card','diw','invoice','passport','tam_tru']
 
-def weight_computation(sub_miou, local_rank = local_rank):
+def weight_computation(sub_miou, local_rank):
     n_samples = np.array([935,11894,5100,1738,3982,27])
     inv_miou = 100 / sub_miou
     weight = inv_miou + 5/n_samples
@@ -116,7 +116,7 @@ def main():
     cudnn.benchmark = True
 
     model = smp.DeepLabV3Plus(
-        encoder_name="efficientnet-b0",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+        encoder_name="efficientnet-b5",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
         encoder_weights="imagenet",     # use `imagenet` pre-trained weights for encoder initialization
         in_channels=3,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=2,                      # model output channels (number of classes in your dataset)
