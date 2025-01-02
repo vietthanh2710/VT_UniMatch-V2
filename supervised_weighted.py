@@ -116,8 +116,8 @@ def main():
     cudnn.enabled = True
     cudnn.benchmark = True
 
-    model = smp.Unet(
-        encoder_name="efficientnet-b4",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+    model = smp.DeepLabV3Plus(
+        encoder_name="efficientnet-b5",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
         encoder_weights="imagenet",     # use `imagenet` pre-trained weights for encoder initialization
         in_channels=3,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=2,                      # model output channels (number of classes in your dataset)
@@ -125,14 +125,6 @@ def main():
     
     if cfg['lock_backbone']:
         model.lock_backbone()
-    
-    # optimizer = AdamW(
-    #     [
-    #         {'params': [p for p in model.backbone.parameters() if p.requires_grad], 'lr': cfg['lr']},
-    #         {'params': [param for name, param in model.named_parameters() if 'backbone' not in name], 'lr': cfg['lr'] * cfg['lr_multi']}
-    #     ], 
-    #     lr=cfg['lr'], betas=(0.9, 0.999), weight_decay=0.01
-    # )
 
     optimizer = AdamW(
         [
@@ -230,7 +222,6 @@ def main():
             iters = epoch * len(trainloader) + i
             lr = cfg['lr'] * (1 - iters / total_iters) ** 0.95
             optimizer.param_groups[0]["lr"] = lr
-            # optimizer.param_groups[1]["lr"] = lr * cfg['lr_multi']
             
             if rank == 0:
                 writer.add_scalar('train/loss_all', loss.item(), iters)
