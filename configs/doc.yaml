@@ -1,22 +1,19 @@
 # arguments for dataset
 dataset: doc
-# data_root: /kaggle/input/doc-data/2_DocumentSegmentation
-data_root: /kaggle/input/doc-infer/infer
+data_root: /kaggle/input/doc-data/2_DocumentSegmentation
+# data_root: /kaggle/input/doc-infer/infer
 nclass: 2
-crop_size: 266
+crop_size: 288
 
 # arguments for training
-epochs: 60
+epochs1: 3
+epochs2: 50
 batch_size: 4 # per GPU x 4 GPUs
-lr: 0.00002
-lr_multi: 10.0
+lr: 0.00005
 criterion:
-  name: CELoss
+  name: Dice
   kwargs:
+    mode: multiclass
     ignore_index: 255
+    
 conf_thresh: 0.95
-
-# arguments for model
-model: dpt
-backbone: dinov2_small
-lock_backbone: False
