@@ -121,9 +121,6 @@ def main():
         classes=2,                      # model output channels (number of classes in your dataset)
     )
     
-    if cfg['lock_backbone']:
-        model.lock_backbone()
-
     optimizer = AdamW(
         [
             {'params': [p for p in model.parameters()]},
