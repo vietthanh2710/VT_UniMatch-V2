@@ -66,12 +66,12 @@ class SemiDataset(Dataset):
         img, mask = resize(img, mask, (0.5, 2.0))
         ignore_value = 254 if self.mode == 'train_u' else 255
 
-
         img, mask = crop(img, mask, self.size, ignore_value)
         img, mask = hflip(img, mask, p=0.5)
 
         if self.mode == 'train_l':
-            return normalize(img, mask)
+            img, mask = normalize(img, mask)
+            return img, mask, id
         
         img_w, img_s1, img_s2 = deepcopy(img), deepcopy(img), deepcopy(img)
 
