@@ -115,7 +115,7 @@ def main():
     cudnn.benchmark = True
 
     model = smp.DeepLabV3Plus(
-        encoder_name="efficientnet-b5",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+        encoder_name="efficientnet-b0",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
         encoder_weights="imagenet",     # use `imagenet` pre-trained weights for encoder initialization
         in_channels=3,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=2,                      # model output channels (number of classes in your dataset)
@@ -252,7 +252,7 @@ def main():
     '''
     Reweight via iou score and n_sample
     '''
-    sub_miou = np.mean(iou_class, axis = 0)
+    sub_miou = np.mean(iou_class, axis = 1)
     folder_weight = weight_computation(sub_miou)
     for epoch in range(epoch + 1+ cfg['epochs1'], cfg['epochs1']+ cfg['epochs2']):
         if rank == 0:
