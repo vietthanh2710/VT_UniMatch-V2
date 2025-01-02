@@ -47,11 +47,11 @@ tam_tru **
 '''
 Category = ['bic_pru','card','diw','invoice','passport','tam_tru']
 
-def weight_computation(sub_miou):
+def weight_computation(sub_miou, local_rank = local_rank):
     n_samples = np.array([935,11894,5100,1738,3982,27])
     inv_miou = 100 / sub_miou
     weight = inv_miou + 5/n_samples
-    weight = torch.tensor(weight, dtype=torch.float32)
+    weight = torch.tensor(weight, dtype=torch.float32, device = local_rank)
     return weight
 
 def evaluate(model, loader, cfg):
