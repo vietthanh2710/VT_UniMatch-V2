@@ -10,3 +10,4 @@ einops
 h5py
 torch
 torchvision
+segmentation_models_pytorch
