@@ -18,8 +18,6 @@ import yaml
 from dataset.supervised import SemiDataset
 import segmentation_models_pytorch as smp
 from segmentation_models_pytorch.losses import DiceLoss
-from model.semseg.dpt import DPT
-from model.unet import UNet
 from util.classes import CLASSES
 from util.ohem import ProbOhemCrossEntropy2d
 from util.utils import *
