@@ -1,7 +1,11 @@
 import numpy as np
 import logging
 import os
+
+import numpy as np
 import torch
+import torch.nn as nn
+
 
 class SegmentationMetrics(object):
     r"""Calculate common metrics in semantic segmentation to evalueate model preformance.
@@ -175,6 +179,66 @@ class AverageMeter(object):
             self.count += num
             self.avg = self.sum / self.count
 
+CATEGORY_TO_IDX = {
+    'bic_pru': 0,
+    'card': 1,
+    'diw': 2,
+    'invoice': 3,
+    'passport': 4,
+    'tam_tru': 5
+}
+
+def get_category_idx(path):
+    """Extract category index (0-5) from image path"""
+    parts = path.split('/')
+    try:
+        img_idx = parts.index('images')
+        category = parts[img_idx + 1]
+        return CATEGORY_TO_IDX.get(category, -1)  # Returns -1 if category not found
+    except (ValueError, IndexError):
+        return -1
+    
+def get_category_idx_multi(paths):
+    """
+    Extract category index (0-5) from a list of image paths.
+    
+    Args:
+        paths (list of str): List of image paths.
+    
+    Returns:
+        list of int: List of category indices (0-5) extracted from paths.
+                     Returns -1 for paths with categories not found in CATEGORY_TO_IDX.
+    """
+    results = []
+    for path in paths:
+        parts = path.split('/')
+        try:
+            img_idx = parts.index('images')
+            category = parts[img_idx + 1]
+            results.append(CATEGORY_TO_IDX.get(category, -1))  # Append -1 if category not found
+        except (ValueError, IndexError):
+            results.append(-1)
+    return results
+
+class MultiAverageMeter(object):
+    """Computes and stores averages for 6 separate arrays"""
+    
+    def __init__(self):
+        self.reset()
+        
+    def reset(self):
+        self.count = np.zeros(6)
+        self.sum = np.zeros((6, 2))  # Assuming input arrays have length 2
+        self.val = np.zeros((6, 2))
+        self.avg = np.zeros((6, 2))
+        
+    def update(self, val, id_path, num=1):
+        idx = get_category_idx(id_path)
+            
+        self.val[idx] = val
+        self.sum[idx] += val * num
+        self.count[idx] += num
+        self.avg[idx] = self.sum[idx] / self.count[idx]
 
 def intersectionAndUnion(output, target, K, ignore_index=255):
     # 'K' classes, output and target sizes are N or N * L or N * H * W, each value in range 0 to K - 1.
