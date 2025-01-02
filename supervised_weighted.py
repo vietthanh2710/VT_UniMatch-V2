@@ -51,6 +51,7 @@ def weight_computation(sub_miou):
     n_samples = np.array([935,11894,5100,1738,3982,27])
     inv_miou = 100 / sub_miou
     weight = inv_miou + 5/n_samples
+    weight = torch.tensor(weight, dtype=torch.float32)
     return weight
 
 def evaluate(model, loader, cfg):
