@@ -254,7 +254,7 @@ def main():
     Reweight via iou score and n_sample
     '''
     sub_miou = np.mean(iou_class, axis = 1)
-    folder_weight = weight_computation(sub_miou)
+    folder_weight = weight_computation(sub_miou, local_rank)
     for epoch in range(epoch + 1+ cfg['epochs1'], cfg['epochs1']+ cfg['epochs2']):
         if rank == 0:
             logger.info('===========> Epoch: {:}, LR: {:.7f}, Previous best: {:.2f}'.format(
