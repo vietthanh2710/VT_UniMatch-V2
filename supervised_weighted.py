@@ -115,8 +115,8 @@ def main():
     cudnn.enabled = True
     cudnn.benchmark = True
 
-    model = smp.DeepLabV3Plus(
-        encoder_name="efficientnet-b5",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+    model = smp.UnetPlusPlus(
+        encoder_name="resnet18",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
         encoder_weights="imagenet",     # use `imagenet` pre-trained weights for encoder initialization
         in_channels=3,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=2,                      # model output channels (number of classes in your dataset)
@@ -250,70 +250,70 @@ def main():
             if is_best:
                 torch.save(checkpoint, os.path.join(args.save_path, 'best1.pth'))
 
-    '''
-    Reweight via iou score and n_sample
-    '''
-    sub_miou = np.mean(iou_class, axis = 1)
-    folder_weight = weight_computation(sub_miou, local_rank)
-    for epoch in range(epoch + 1+ cfg['epochs1'], cfg['epochs1']+ cfg['epochs2']):
-        if rank == 0:
-            logger.info('===========> Epoch: {:}, LR: {:.7f}, Previous best: {:.2f}'.format(
-                epoch, optimizer.param_groups[0]['lr'], previous_best))
+    # '''
+    # Reweight via iou score and n_sample
+    # '''
+    # sub_miou = np.mean(iou_class, axis = 1)
+    # folder_weight = weight_computation(sub_miou, local_rank)
+    # for epoch in range(epoch + 1+ cfg['epochs1'], cfg['epochs1']+ cfg['epochs2']):
+    #     if rank == 0:
+    #         logger.info('===========> Epoch: {:}, LR: {:.7f}, Previous best: {:.2f}'.format(
+    #             epoch, optimizer.param_groups[0]['lr'], previous_best))
             
-        model.train()
-        total_loss = AverageMeter()
+    #     model.train()
+    #     total_loss = AverageMeter()
 
-        trainsampler.set_epoch(epoch)
+    #     trainsampler.set_epoch(epoch)
 
-        for i, (img, mask, id) in enumerate(trainloader):
-            folder_id = get_category_idx_multi(id)
+    #     for i, (img, mask, id) in enumerate(trainloader):
+    #         folder_id = get_category_idx_multi(id)
 
-            img, mask = img.cuda(), mask.cuda()
+    #         img, mask = img.cuda(), mask.cuda()
 
-            pred = model(img)
+    #         pred = model(img)
 
-            loss = folder_weight[folder_id] * criterion(pred, mask)
+    #         loss = folder_weight[folder_id] * criterion(pred, mask)
             
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+    #         optimizer.zero_grad()
+    #         loss.backward()
+    #         optimizer.step()
 
-            total_loss.update(loss.item())
+    #         total_loss.update(loss.item())
 
-            iters = epoch * len(trainloader) + i
-            lr = cfg['lr'] * (1 - iters / total_iters) ** 0.95
-            optimizer.param_groups[0]["lr"] = lr
+    #         iters = epoch * len(trainloader) + i
+    #         lr = cfg['lr'] * (1 - iters / total_iters) ** 0.95
+    #         optimizer.param_groups[0]["lr"] = lr
             
-            if rank == 0:
-                writer.add_scalar('train/loss_all', loss.item(), iters)
-                writer.add_scalar('train/loss_x', loss.item(), iters)
+    #         if rank == 0:
+    #             writer.add_scalar('train/loss_all', loss.item(), iters)
+    #             writer.add_scalar('train/loss_x', loss.item(), iters)
             
-            if (i % (len(trainloader) // 8) == 0) and (rank == 0):
-                logger.info('Iters: {:}, Total loss: {:.3f}'.format(i, total_loss.avg))
+    #         if (i % (len(trainloader) // 8) == 0) and (rank == 0):
+    #             logger.info('Iters: {:}, Total loss: {:.3f}'.format(i, total_loss.avg))
         
-        mIoU, iou_class = evaluate(model, valloader, cfg)
+    #     mIoU, iou_class = evaluate(model, valloader, cfg)
         
-        if rank == 0:
-            for (cls_idx, iou) in enumerate(iou_class):
-                logger.info(f'{Category[cls_idx]:<8} IOU: {iou[0]:.2f} | {iou[1]:.2f} --> Mean: {np.mean(iou):.2f}%')
-            logger.info('***** Evaluation ***** >>>> MeanIoU      : {:.2f}\n'.format(mIoU))         
-            writer.add_scalar('eval/mIoU', mIoU, epoch)
+    #     if rank == 0:
+    #         for (cls_idx, iou) in enumerate(iou_class):
+    #             logger.info(f'{Category[cls_idx]:<8} IOU: {iou[0]:.2f} | {iou[1]:.2f} --> Mean: {np.mean(iou):.2f}%')
+    #         logger.info('***** Evaluation ***** >>>> MeanIoU      : {:.2f}\n'.format(mIoU))         
+    #         writer.add_scalar('eval/mIoU', mIoU, epoch)
 
-            for i, iou in enumerate(iou_class):
-                writer.add_scalar('eval/%s_IoU' % (Category[i]), np.mean(iou), epoch)
+    #         for i, iou in enumerate(iou_class):
+    #             writer.add_scalar('eval/%s_IoU' % (Category[i]), np.mean(iou), epoch)
         
-        is_best = mIoU > previous_best
-        previous_best = max(mIoU, previous_best)
-        if rank == 0:
-            checkpoint = {
-                'model': model.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'epoch': epoch,
-                'previous_best': previous_best,
-            }
-            torch.save(checkpoint, os.path.join(args.save_path, 'latest.pth'))
-            if is_best:
-                torch.save(checkpoint, os.path.join(args.save_path, 'best2.pth'))
+    #     is_best = mIoU > previous_best
+    #     previous_best = max(mIoU, previous_best)
+    #     if rank == 0:
+    #         checkpoint = {
+    #             'model': model.state_dict(),
+    #             'optimizer': optimizer.state_dict(),
+    #             'epoch': epoch,
+    #             'previous_best': previous_best,
+    #         }
+    #         torch.save(checkpoint, os.path.join(args.save_path, 'latest.pth'))
+    #         if is_best:
+    #             torch.save(checkpoint, os.path.join(args.save_path, 'best2.pth'))
 
 if __name__ == '__main__':
     main()
