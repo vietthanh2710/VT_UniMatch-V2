@@ -6,14 +6,13 @@ nclass: 2
 crop_size: 288
 
 # arguments for training
-epochs1: 15
+epochs1: 100
 epochs2: 50
 batch_size: 4 # per GPU x 4 GPUs
 lr: 0.00005
 criterion:
-  name: Dice
+  name: CELoss
   kwargs:
-    mode: multiclass
     ignore_index: 255
     
 conf_thresh: 0.95
