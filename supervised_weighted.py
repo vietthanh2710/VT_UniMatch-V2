@@ -115,8 +115,8 @@ def main():
     cudnn.enabled = True
     cudnn.benchmark = True
 
-    model = smp.UnetPlusPlus(
-        encoder_name="resnet18",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+    model = smp.Unet(
+        encoder_name="resnet34",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
         encoder_weights="imagenet",     # use `imagenet` pre-trained weights for encoder initialization
         in_channels=3,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=2,                      # model output channels (number of classes in your dataset)
@@ -144,6 +144,9 @@ def main():
         criterion = ProbOhemCrossEntropy2d(**cfg['criterion']['kwargs']).cuda(local_rank)
     elif cfg['criterion']['name'] == 'Dice':
         criterion = DiceLoss(**cfg['criterion']['kwargs']).cuda(local_rank)
+    elif cfg['criterion']['name'] == 'DiceCE':
+        criterion1 = DiceLoss(mode = 'multiclass', **cfg['criterion']['kwargs']).cuda(local_rank)
+        criterion2 = nn.CrossEntropyLoss(**cfg['criterion']['kwargs']).cuda(local_rank)
     else:
         raise NotImplementedError('%s criterion is not implemented' % cfg['criterion']['name'])
     
