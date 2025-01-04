@@ -210,7 +210,7 @@ def main():
 
             pred = model(img)
 
-            loss = criterion(pred, mask)
+            loss = criterion1(pred, mask) + criterion2(pred, mask)
             
             optimizer.zero_grad()
             loss.backward()
