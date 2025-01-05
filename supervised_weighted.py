@@ -87,7 +87,9 @@ def evaluate(model, loader, cfg):
             union_meter.update(reduced_union.cpu().numpy(), id_path = ''.join(id))
 
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
-    mIOU = np.mean(iou_class)
+    n = np.array([935,11894,5100,1738,3982,27])
+    mIOU_folder = np.mean(iou_class, axis = 1)
+    mIoU = np.mean(n*mIOU_folder) 
 
     return mIOU, iou_class
 
@@ -191,11 +193,11 @@ def main():
         if rank == 0:
             logger.info('************ Load from checkpoint at epoch %i\n' % epoch)
 
-    checkpoint = torch.load('/kaggle/input/segformer_mitb2/pytorch/default/1/latest.pth', map_location='cpu')
-    model.load_state_dict(checkpoint['model'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
-    epoch = checkpoint['epoch']
-    previous_best = checkpoint['previous_best']
+    # checkpoint = torch.load('/kaggle/input/segformer_mitb2/pytorch/default/1/latest.pth', map_location='cpu')
+    # model.load_state_dict(checkpoint['model'])
+    # optimizer.load_state_dict(checkpoint['optimizer'])
+    # epoch = checkpoint['epoch']
+    # previous_best = checkpoint['previous_best']
     
     """
     Train with equal distribution
