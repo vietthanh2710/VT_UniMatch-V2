@@ -87,7 +87,7 @@ def evaluate(model, loader, cfg):
             union_meter.update(reduced_union.cpu().numpy(), id_path = ''.join(id))
 
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
-    n = np.array([935,11894,5100,1738,3982,27])
+    n = np.array([104,1322,567,193,442,3])
     mIOU_folder = np.mean(iou_class, axis = 1)
     mIoU = np.mean(n*mIOU_folder) 
 
