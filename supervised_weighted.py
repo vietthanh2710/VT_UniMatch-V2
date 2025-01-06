@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import yaml
 
-from dataset.supervised import SemiDataset
+from dataset.supervised import SemiDataset, SemiDataset_Weight
 import segmentation_models_pytorch as smp
 from segmentation_models_pytorch.losses import DiceLoss
 from util.classes import CLASSES
