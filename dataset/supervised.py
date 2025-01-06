@@ -101,25 +101,60 @@ class SemiDataset(Dataset):
         return len(self.ids)
     
 
-# dataset = SemiDataset(
-#     name="DocumentSegmentation",
-#     root="/u03/thanhnv/2_DocumentSegmentation",
-#     mode="train_l",
-#     size=640,  # Resize to 256x256
-# )
+class SemiDataset_Weight(Dataset):
+    def __init__(self, name, root, mode, size=None, id_path=None, nsample=None, weight = None):
+        """
+        Args:
+            name (str): Dataset name.
+            root (str): Root directory of the dataset.
+                /u03/thanhnv/2_DocumentSegmentation
+            mode (str): Mode of operation ('train_l', 'train_u', or 'val').
+            size (tuple): Target size of images (optional).
+            id_path (str): Path to the file listing image paths.
+            nsample (int): Number of samples for 'train_l'.
+        """
+        self.name = name
+        self.root = root
+        self.mode = mode
+        self.size = size
 
-# test_img = dataset[10][0]
-# test_msk1 = dataset[10][1]
-# test_msk2 = dataset[1][1].unsqueeze(dim=0)/255
-# test_msk2 = test_msk2.long()
-# x = torch.rand(size = (1,1,640,640))
-# import torch.nn as nn
-# import torch
-# cri = nn.CrossEntropyLoss()
-# print(x.shape,test_msk2.shape)
-# loss = cri(x,test_msk2)
-# print(loss)
+        # Determine the file path for train/validation IDs
+        if id_path is None:
+            id_path = os.path.join(root, 'train.txt' if mode in ['train_l'] else 'val.txt')
 
-# # from torchvision.utils import save_image
-# # save_image(test_img, "/u03/thanhnv/2_DocumentSegmentation/test_img.png")
-# # save_image(test_msk, "/u03/thanhnv/2_DocumentSegmentation/test_msk.png")
+        # Read image paths from the ID file
+        with open(id_path, 'r') as f:
+            self.ids = f.read().splitlines()
+        self.folder_sample = get_category_idx_multi(self.ids)
+        self.sample_weight = [weight[sample] for sample in self.folder_sample]
+        # Handle sampling for labeled training data
+        if mode == 'train_l' and nsample is not None and nsample > len(self.ids):
+            self.ids *= math.ceil(nsample / len(self.ids))
+            self.ids = self.ids[:nsample]
+
+
+    def __getitem__(self, item):
+        # Image path from the IDs list
+        id = self.ids[item]
+        img_path = os.path.join(self.root, id)
+        img = Image.open(img_path).convert('RGB')
+        
+        mask_path = img_path.replace('/images/', '/masks/').rsplit('.', 1)[0] + '.png'
+        mask = Image.fromarray(np.array(Image.open(mask_path))) 
+        
+        if self.mode == 'val':
+            img, mask = normalize(img, mask)
+            return img, mask, id
+        
+        img, mask = resize(img, mask, (0.5, 2.0))
+        ignore_value = 255
+
+        img, mask = crop(img, mask, self.size, ignore_value)
+        img, mask = hflip(img, mask, p=0.5)
+
+        if self.mode == 'train_l':
+            img, mask = normalize(img, mask)
+            return img, mask, id
+
+    def __len__(self):
+        return len(self.ids)
