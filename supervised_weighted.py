@@ -89,7 +89,7 @@ def evaluate(model, loader, cfg):
     iou_class = intersection_meter.sum / (union_meter.sum + 1e-10) * 100.0
     n = np.array([104,1322,567,193,442,3])
     mIOU_folder = np.mean(iou_class, axis = 1)
-    mIoU = np.mean(n*mIOU_folder) 
+    mIoU = np.sum(n*mIOU_folder) / 2631.
 
     return mIoU, iou_class
 
@@ -117,8 +117,8 @@ def main():
     cudnn.enabled = True
     cudnn.benchmark = True
 
-    model = smp.Segformer(
-        encoder_name="mit_b4",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+    model = smp.DeepLabV3Plus(
+        encoder_name="resnet50",        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
         encoder_weights="imagenet",     # use `imagenet` pre-trained weights for encoder initialization
         in_channels=3,                  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=2,                      # model output channels (number of classes in your dataset)
@@ -261,70 +261,77 @@ def main():
             if is_best:
                 torch.save(checkpoint, os.path.join(args.save_path, 'best1.pth'))
 
-    # '''
-    # Reweight via iou score and n_sample
-    # '''
-    # sub_miou = np.mean(iou_class, axis = 1)
-    # folder_weight = weight_computation(sub_miou, local_rank)
-    # for epoch in range(epoch + 1+ cfg['epochs1'], cfg['epochs1']+ cfg['epochs2']):
-    #     if rank == 0:
-    #         logger.info('===========> Epoch: {:}, LR: {:.7f}, Previous best: {:.2f}'.format(
-    #             epoch, optimizer.param_groups[0]['lr'], previous_best))
+    '''
+    Reweight via iou score and n_sample
+    '''
+
+    sub_miou = np.mean(iou_class, axis = 1)
+    folder_weight = weight_computation(sub_miou, local_rank)
+    print(folder_weight)
+    logger.info(folder_weight)
+    trainset_new = SemiDataset_Weight(
+        cfg['dataset'], cfg['data_root'], 'train_l', cfg['crop_size'], args.labeled_id_path, nsample=n_upsampled[cfg['dataset']], weight = folder_weight
+    )
+    
+    trainsampler_new = torch.utils.data.WeightedRandomSampler(weights=trainset_new.sample_weight, num_samples=len(trainset_new), replacement=True)
+    trainloader_new = DataLoader(
+        trainset, batch_size=cfg['batch_size'], pin_memory=True, num_workers=4, drop_last=True, sampler=trainsampler_new
+    )
+
+    for epoch in range(epoch + 1, cfg['epochs1']+ cfg['epochs2']):
+        if rank == 0:
+            logger.info('===========> Epoch: {:}, LR: {:.7f}, Previous best: {:.2f}'.format(
+                epoch, optimizer.param_groups[0]['lr'], previous_best))
             
-    #     model.train()
-    #     total_loss = AverageMeter()
+        model.train()
+        total_loss = AverageMeter()
 
-    #     trainsampler.set_epoch(epoch)
+        for i, (img, mask, _) in enumerate(trainloader_new):
+            img, mask = img.cuda(), mask.cuda()
 
-    #     for i, (img, mask, id) in enumerate(trainloader):
-    #         folder_id = get_category_idx_multi(id)
-
-    #         img, mask = img.cuda(), mask.cuda()
-
-    #         pred = model(img)
-
-    #         loss = folder_weight[folder_id] * criterion(pred, mask)
+            pred = model(img)
             
-    #         optimizer.zero_grad()
-    #         loss.backward()
-    #         optimizer.step()
-
-    #         total_loss.update(loss.item())
-
-    #         iters = epoch * len(trainloader) + i
-    #         lr = cfg['lr'] * (1 - iters / total_iters) ** 0.95
-    #         optimizer.param_groups[0]["lr"] = lr
+            loss = criterion1(pred, mask) + criterion2(pred, mask)
             
-    #         if rank == 0:
-    #             writer.add_scalar('train/loss_all', loss.item(), iters)
-    #             writer.add_scalar('train/loss_x', loss.item(), iters)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            total_loss.update(loss.item())
+
+            iters = epoch * len(trainloader) + i
+            lr = cfg['lr'] * (1 - iters / total_iters) ** 0.95
+            optimizer.param_groups[0]["lr"] = lr
             
-    #         if (i % (len(trainloader) // 8) == 0) and (rank == 0):
-    #             logger.info('Iters: {:}, Total loss: {:.3f}'.format(i, total_loss.avg))
+            if rank == 0:
+                writer.add_scalar('train/loss_all', loss.item(), iters)
+                writer.add_scalar('train/loss_x', loss.item(), iters)
+            
+            if (i % (len(trainloader) // 8) == 0) and (rank == 0):
+                logger.info('Iters: {:}, Total loss: {:.3f}'.format(i, total_loss.avg))
         
-    #     mIoU, iou_class = evaluate(model, valloader, cfg)
-        
-    #     if rank == 0:
-    #         for (cls_idx, iou) in enumerate(iou_class):
-    #             logger.info(f'{Category[cls_idx]:<8} IOU: {iou[0]:.2f} | {iou[1]:.2f} --> Mean: {np.mean(iou):.2f}%')
-    #         logger.info('***** Evaluation ***** >>>> MeanIoU      : {:.2f}\n'.format(mIoU))         
-    #         writer.add_scalar('eval/mIoU', mIoU, epoch)
+        mIoU, iou_class = evaluate(model, valloader, cfg)
+        if rank == 0:
+            for (cls_idx, iou) in enumerate(iou_class):
+                logger.info(f'{Category[cls_idx]:<8} IOU: {iou[0]:.2f} | {iou[1]:.2f} --> Mean: {np.mean(iou):.2f}%')
+            logger.info('***** Evaluation ***** >>>> MeanIoU      : {:.2f}\n'.format(mIoU))         
+            writer.add_scalar('eval/mIoU', mIoU, epoch)
 
-    #         for i, iou in enumerate(iou_class):
-    #             writer.add_scalar('eval/%s_IoU' % (Category[i]), np.mean(iou), epoch)
+            for i, iou in enumerate(iou_class):
+                writer.add_scalar('eval/%s_IoU' % (Category[i]), np.mean(iou), epoch)
         
-    #     is_best = mIoU > previous_best
-    #     previous_best = max(mIoU, previous_best)
-    #     if rank == 0:
-    #         checkpoint = {
-    #             'model': model.state_dict(),
-    #             'optimizer': optimizer.state_dict(),
-    #             'epoch': epoch,
-    #             'previous_best': previous_best,
-    #         }
-    #         torch.save(checkpoint, os.path.join(args.save_path, 'latest.pth'))
-    #         if is_best:
-    #             torch.save(checkpoint, os.path.join(args.save_path, 'best2.pth'))
+        is_best = mIoU > previous_best
+        previous_best = max(mIoU, previous_best)
+        if rank == 0:
+            checkpoint = {
+                'model': model.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'epoch': epoch,
+                'previous_best': previous_best,
+            }
+            torch.save(checkpoint, os.path.join(args.save_path, 'latest.pth'))
+            if is_best:
+                torch.save(checkpoint, os.path.join(args.save_path, 'best2.pth'))
 
 if __name__ == '__main__':
     main()
