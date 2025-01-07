@@ -193,11 +193,11 @@ def main():
         if rank == 0:
             logger.info('************ Load from checkpoint at epoch %i\n' % epoch)
 
-    # checkpoint = torch.load('/kaggle/input/segformer_mitb2/pytorch/default/1/latest.pth', map_location='cpu')
-    # model.load_state_dict(checkpoint['model'])
-    # optimizer.load_state_dict(checkpoint['optimizer'])
-    # epoch = checkpoint['epoch']
-    # previous_best = checkpoint['previous_best']
+    checkpoint = torch.load('/kaggle/input/deeplabv3_resnet50/pytorch/default/1/latest.pth', map_location='cpu')
+    model.load_state_dict(checkpoint['model'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+    epoch = checkpoint['epoch']
+    previous_best = checkpoint['previous_best']
     
     """
     Train with equal distribution
