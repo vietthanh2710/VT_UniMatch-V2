@@ -5,7 +5,7 @@ nclass: 2
 crop_size: 308
 
 # arguments for training
-epochs1: 30
+epochs1: 50
 epochs2: 30
 batch_size: 12 # per GPU x 4 GPUs
 lr: 0.000005
