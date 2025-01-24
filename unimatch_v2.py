@@ -115,7 +115,7 @@ def evaluate(model, loader, mode, cfg, multiplier=None):
 
     n = np.array([104,1322,567,193,442])
     mIoU_folder = np.mean(iou_class, axis = 1)
-    mIoU = np.sum(n*mIoU_folder) / 2631.
+    mIoU = np.sum(n*mIoU_folder) / 2628.
 
     return mIoU, iou_class
 
