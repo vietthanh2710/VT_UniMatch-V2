@@ -223,14 +223,16 @@ def get_category_idx_multi(paths):
 class MultiAverageMeter(object):
     """Computes and stores averages for 6 separate arrays"""
     
-    def __init__(self):
+    def __init__(self, folder = 5, length = 2):
+        self.folder = folder
+        self.length = length
         self.reset()
         
     def reset(self):
-        self.count = np.zeros(6)
-        self.sum = np.zeros((6, 2))  # Assuming input arrays have length 2
-        self.val = np.zeros((6, 2))
-        self.avg = np.zeros((6, 2))
+        self.count = np.zeros(self.folder)
+        self.sum = np.zeros((self.folder, self.length))  # Assuming input arrays have length 2
+        self.val = np.zeros((self.folder, self.length))
+        self.avg = np.zeros((self.folder, self.length))
         
     def update(self, val, id_path, num=1):
         idx = get_category_idx(id_path)
