@@ -47,11 +47,11 @@ class SemiDataset(Dataset):
         id = self.ids[item]
         img_path = os.path.join(self.root, id)
         img = Image.open(img_path).convert('RGB')
-        
+
         if self.mode == 'infer':
             img = normalize(img)
             return img, id
-            
+        
         if self.mode == 'train_u':
             mask = Image.fromarray(np.zeros((img.size[1], img.size[0]), dtype=np.uint8))
         else:
@@ -70,8 +70,9 @@ class SemiDataset(Dataset):
         img, mask = hflip(img, mask, p=0.5)
 
         if self.mode == 'train_l':
-            img, mask = normalize(img, mask)
-            return img, mask, id
+            # img, mask = normalize(img, mask)
+            # return img, mask, id # weighted fully
+            return normalize(img, mask) # semi
         
         img_w, img_s1, img_s2 = deepcopy(img), deepcopy(img), deepcopy(img)
 
@@ -100,6 +101,37 @@ class SemiDataset(Dataset):
     def __len__(self):
         return len(self.ids)
     
+
+CATEGORY_TO_IDX = {
+    'bic_pru': 0,
+    'card': 1,
+    'diw': 2,
+    'invoice': 3,
+    'passport': 4,
+    'tam_tru': 5
+}
+
+def get_category_idx_multi(paths):
+    """
+    Extract category index (0-5) from a list of image paths.
+    
+    Args:
+        paths (list of str): List of image paths.
+    
+    Returns:
+        list of int: List of category indices (0-5) extracted from paths.
+                     Returns -1 for paths with categories not found in CATEGORY_TO_IDX.
+    """
+    results = []
+    for path in paths:
+        parts = path.split('/')
+        try:
+            img_idx = parts.index('images')
+            category = parts[img_idx + 1]
+            results.append(CATEGORY_TO_IDX.get(category, -1))  # Append -1 if category not found
+        except (ValueError, IndexError):
+            results.append(-1)
+    return results
 
 class SemiDataset_Weight(Dataset):
     def __init__(self, name, root, mode, size=None, id_path=None, nsample=None, weight = None):
@@ -154,7 +186,8 @@ class SemiDataset_Weight(Dataset):
 
         if self.mode == 'train_l':
             img, mask = normalize(img, mask)
-            return img, mask, id
+            return img, mask
 
     def __len__(self):
         return len(self.ids)
+    
