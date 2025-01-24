@@ -1,6 +1,6 @@
 # arguments for dataset
 dataset: doc
-data_root: /u03/thanhnv/2_DocumentSegmentation
+data_root: /kaggle/input/doc-data/2_DocumentSegmentation
 nclass: 2
 crop_size: 308
 
