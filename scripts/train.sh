@@ -4,7 +4,8 @@ exp='dinov2_small'
 split='366'
 
 config=configs/${dataset}.yaml
-labeled_id_path=/kaggle/input/doc-data/2_DocumentSegmentation/train.txt
+# labeled_id_path=/kaggle/input/doc-data/2_DocumentSegmentation/train.txt
+labeled_id_path=/kaggle/input/doc-path-no-tamtru/train.txt
 unlabeled_id_path=/kaggle/input/doc3d-image/Doc3d_dataset/file_path.txt
 save_path=/kaggle/working/exp/semi
 
