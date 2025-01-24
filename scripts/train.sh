@@ -1,12 +1,12 @@
-dataset='doc'
-method='supervised_weighted'
-exp='doc'
+dataset='doc_semi'
+method='unimatch_v2'
+exp='dinov2_small'
 split='366'
 
 config=configs/${dataset}.yaml
 labeled_id_path=/kaggle/input/doc-data/2_DocumentSegmentation/train.txt
-unlabeled_id_path=splits/$dataset/$split/unlabeled.txt
-save_path=/kaggle/working/exp/doc/supervised
+unlabeled_id_path=/kaggle/input/doc3d-image/Doc3d_dataset/file_path.txt
+save_path=/kaggle/working/exp/semi
 
 mkdir -p $save_path
 
