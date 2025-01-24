@@ -197,7 +197,7 @@ def main():
         cfg['dataset'], cfg['data_root'], 'train_l', cfg['crop_size'], args.labeled_id_path, nsample=len(trainset_u.ids)
     )
     valset = SemiDataset(
-        cfg['dataset'], cfg['data_root'], 'val'
+        cfg['dataset'], cfg['data_root'], 'val', id_path = '/kaggle/input/doc-path-no-tamtru/val.txt'
     )
     
     trainsampler_l = torch.utils.data.distributed.DistributedSampler(trainset_l)
